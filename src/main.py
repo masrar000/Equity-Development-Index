@@ -11,7 +11,7 @@ def main():
     # File Upload UI
     uploaded_file = st.file_uploader("Upload a PDF", type=["pdf"])
     if uploaded_file:
-        file_path = os.path.join("uploaded_files", uploaded_file.name)
+        file_path = os.path.join("data", uploaded_file.name)
         
         # Save uploaded PDF locally
         with open(file_path, "wb") as f:
