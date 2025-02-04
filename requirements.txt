@@ -1,0 +1,8 @@
+openai
+langchain
+langchain-community
+pandas
+streamlit
+openpyxl
+PyPDF2
+nest-asyncio
