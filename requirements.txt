@@ -6,3 +6,5 @@ streamlit
 openpyxl
 PyPDF2
 nest-asyncio
+pypdf
+cryptography
