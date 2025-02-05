@@ -20,13 +20,21 @@ Download Results: Export extracted data as CSV files for easy integration into o
 
 ## 📁 Project Structure
 Equity-Development-Index/
+
 ├── data/                         # Folder containing uploaded and sample PDF files
+
 │   ├── sample.pdf                # Example PDF for testing
+
 │   └── other uploaded PDFs...
+
 ├── src/
+
 │   ├── main.py                   # Streamlit app for file upload and interaction
+
 │   ├── processing.py             # PDF processing and regex extraction logic
+
 ├── requirements.txt              # Dependencies for setting up the project
+
 ├── README.md                     # Project documentation
 
 ## 🔧 Installation
@@ -79,20 +87,30 @@ Adding new extraction queries: Modify the queries dictionary in processing.py to
 Improving regex patterns: Improve or add new patterns in _extract_relevant_info_from_split() to handle different PDF formats.
 
 Example:
+
 queries = {
+   
     "Affordable residential units": "How many affordable residential units are listed?",
+    
     "Gross square footage (GSF)": "What is the total GSF mentioned?",
+    
     "Parking spaces": "How many parking spaces are allocated?",
+    
     "Healthcare space": "How many square feet of space is allocated to healthcare facilities?"
+
 }
 
 ## 📊 Sample Output
 When you upload a PDF and process it, the app displays the results in a table like:
 
 Component                    | Extracted Value
+
 Affordable residential units | 45
+
 Gross square footage (GSF)	 | 120,000
+
 Parking spaces	             | 150
+
 You can download the results as a CSV file for further analysis.
 
 ## 🤝 Contributing
