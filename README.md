@@ -32,34 +32,50 @@ Equity-Development-Index/
 ## 🔧 Installation
 ### 1. Clone the repository:
 git clone https://github.com/masrar000/Equity-Development-Index.git
+
 cd Equity-Development-Index
+
 ### 2. Set up a virtual environment (optional but recommended):
 python3 -m venv env
+
 source env/bin/activate   # For Linux/Mac
+
 env\Scripts\activate      # For Windows
+
 ### 3. Install dependencies:
+
 pip install -r requirements.txt
 
 ## 🏃 How to Run
 
 ### 1. Navigate to the project directory and run the Streamlit app:
+
 python -m streamlit run src/main.py
+
 ### 2.Open Streamlit in your browser:
+
 python -m streamlit run src/main.py
 
 ## 🎯 Usage
+
 ### 1. Upload a PDF:
+
 Use the Streamlit file uploader to upload a PDF from your local machine. The file will be saved in the data/ folder for processing.
 
 ### 2. Process the PDF:
+
 Once uploaded, the app will automatically extract key metrics and display them as a table.
 
 ### 3. Download Results:
+
 Download the extracted results as a CSV file directly from the Streamlit app.
 
 ## ✏️ Customization
+
 You can customize the project by:
+
 Adding new extraction queries: Modify the queries dictionary in processing.py to extract additional metrics.
+
 Improving regex patterns: Improve or add new patterns in _extract_relevant_info_from_split() to handle different PDF formats.
 
 Example:
