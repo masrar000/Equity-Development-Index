@@ -103,13 +103,13 @@ queries = {
 ## 📊 Sample Output
 When you upload a PDF and process it, the app displays the results in a table like:
 
-Component                    | Extracted Value
+Component                       | Extracted Value
 
-Affordable residential units | 45
+Affordable residential units    | 45
 
-Gross square footage (GSF)	 | 120,000
+Gross square footage (GSF)	     | 120,000
 
-Parking spaces	             | 150
+Parking spaces	                 | 150
 
 You can download the results as a CSV file for further analysis.
 
