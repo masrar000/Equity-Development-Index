@@ -1,6 +1,9 @@
-# run_ui.py
 import os
 import streamlit as st
+import tempfile
+import shutil
+import zipfile
+
 from processing import (
     cleanup_generated_files,
     load_and_split_pdfs_from_directory,
@@ -10,56 +13,80 @@ from processing import (
 )
 from langchain_openai import ChatOpenAI
 
-# Title of the Streamlit application
 st.title("Batch PDF Analysis with RAG Workflows")
 
-# Text input for the parent directory path
-directory = st.text_input("Enter parent directory with PDF subfolders:")
+input_mode = st.radio(
+    "Select input mode:",
+    ("Directory", "Upload PDF", "ZIP Path")
+)
 
-# Button to trigger the analysis
+directory = None
+_temp_dirs = []
+
+# --- Input Modes ---
+if input_mode == "Directory":
+    directory = st.text_input("Enter parent directory with PDF subfolders:")
+elif input_mode == "Upload PDF":
+    uploaded_pdf = st.file_uploader("Upload a single PDF file", type="pdf")
+    if uploaded_pdf:
+        tmp = tempfile.mkdtemp()
+        _temp_dirs.append(tmp)
+        pdf_path = os.path.join(tmp, uploaded_pdf.name)
+        with open(pdf_path, "wb") as f:
+            f.write(uploaded_pdf.getbuffer())
+        directory = tmp
+elif input_mode == "ZIP Path":
+    zip_path = st.text_input("Enter full path to your ZIP archive:")
+    if zip_path and os.path.isfile(zip_path) and zip_path.lower().endswith(".zip"):
+        tmp = tempfile.mkdtemp()
+        _temp_dirs.append(tmp)
+        try:
+            with zipfile.ZipFile(zip_path, "r") as z:
+                z.extractall(tmp)
+            directory = tmp
+        except zipfile.BadZipFile:
+            st.error("That doesn’t look like a valid ZIP file.")
+
+# --- Run Analysis ---
 if st.button("Run Analysis"):
     if not directory or not os.path.isdir(directory):
-        st.warning("Please enter a valid directory path!")
+        st.warning("Please provide a valid directory, PDF upload, or ZIP path.")
     else:
-        # Initialize the LLM
         llm = ChatOpenAI(model="gpt-4o-2024-05-13")
 
-        # Discover subfolders; if none, process the directory itself
-        subfolders = [
-            os.path.join(directory, d)
-            for d in os.listdir(directory)
-            if os.path.isdir(os.path.join(directory, d))
-        ]
-        if not subfolders:
-            subfolders = [directory]
+        # recursively find all dirs under `directory` that contain PDFs
+        pdf_dirs = []
+        for root, _, files in os.walk(directory):
+            if any(f.lower().endswith(".pdf") for f in files):
+                pdf_dirs.append(root)
 
-        # Iterate through each folder and run the pipeline
-        for sub in subfolders:
-            st.write(f"## Processing: {os.path.basename(sub)}")
-            # 1) Cleanup old Excel if exists
-            cleanup_generated_files(sub)
+        if not pdf_dirs:
+            st.error("No PDFs found anywhere under that path. Please check your input.")
+        else:
+            for sub in pdf_dirs:
+                st.write(f"## Processing: {os.path.relpath(sub, directory)}")
+                cleanup_generated_files(sub)
 
-            # 2) Load and split PDFs
-            splits = load_and_split_pdfs_from_directory(sub)
-            if not splits:
-                st.error(f"No PDFs found in {sub}, skipping.")
-                continue
+                splits = load_and_split_pdfs_from_directory(sub)
+                if not splits:
+                    st.error(f"No PDFs actually loaded from {sub}, skipping.")
+                    continue
 
-            # 3) Create vectorstore
-            vs = create_vectorstore(splits)
+                vs = create_vectorstore(splits)
+                df = process_all_dictionary_questions(sub, vs, llm)
+                if df.empty:
+                    st.error(f"No data extracted for {os.path.basename(sub)}.")
+                    continue
 
-            # 4) Run RAG queries and assemble DataFrame
-            df = process_all_dictionary_questions(sub, vs, llm)
-            if df.empty:
-                st.error(f"No data extracted for {os.path.basename(sub)}.")
-                continue
+                out = save_results_to_excel(df, sub)
+                st.success(f"Results saved to {out}")
+                with open(out, "rb") as f:
+                    st.download_button(
+                        label=f"Download {os.path.basename(out)}",
+                        data=f,
+                        file_name=os.path.basename(out),
+                    )
 
-            # 5) Save to Excel and provide download link
-            output_file = save_results_to_excel(df, sub)
-            st.success(f"Results saved to {output_file}")
-            with open(output_file, "rb") as f:
-                st.download_button(
-                    label=f"Download {os.path.basename(output_file)}",
-                    data=f,
-                    file_name=os.path.basename(output_file),
-                )
+        # Clean up any temporary dirs
+        for td in _temp_dirs:
+            shutil.rmtree(td, ignore_errors=True)
