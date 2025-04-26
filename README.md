@@ -1,128 +1,209 @@
-# Equity Development Index (EDI) 🌍
-LLM-driven framework using HyDE, RAG Fusion, and LangChain for extracting, structuring, and scoring data from Environmental Impact Studies (EIS) to support urban planning decisions. This tool automates the extraction of key metrics such as residential units, parking spaces, gross square footage, and other development-related insights from large PDF documents.
+# Equity Development Index (EDI) 🌍: Batch PDF Analysis with RAG Workflows
+Equity Development Index (EDI) is a Large Language Model (LLM)-driven Python toolkit that leverages HYpothetical Document Embedding (HyDE), Retrieveal Augmented Generation (RAG) Fusion, Agentic RAG and LangChain—powered by OpenAI’s GPT-4o—to batch-process Environmental Impact Studies (EIS) and similar PDFs. It automates the extraction, structuring, and scoring of key development metrics (e.g., residential unit counts, parking spaces, gross square footage, displacement estimates, open-space ratios, and waste/emissions forecasts) and compiles them into per-folder Excel reports. EDI offers both an interactive Streamlit web User Interface (UI) for point-and-click use and a headless Command Line Interface (CLI) mode for scripted batch runs, making it a flexible decision-support solution for equity-focused urban planning.
 
-📖 Table of Contents
-Features
-Project Structure
-Installation
-How to Run
-Usage
-Customization
-Sample Output
-Contributing
+📋 Table of Contents
+🌟 Features
+⚙️ Prerequisites
+💻 Installation
+🔧 Configuration
+🚀 Usage
+   🔍 Streamlit Web UI
+   💻 CLI Mode
+📂 Project Structure
+🗂️ File Descriptions
+🤖 How It Works
+⚙️ Customization & Tuning
+🐞 Troubleshooting
+🤝 Contributing
+📄 License
 
 ## 🚀 Features
-Automated PDF Parsing: Easily upload large PDFs and automatically extract key metrics.
-RAG Workflows: Retrieve context and extract relevant answers using LangChain and RAG Fusion.
-Regex-based Extraction: Extract numerical and structured information like gross square footage (GSF), affordable residential units, and parking spaces.
-Streamlit UI: Interactive user interface for PDF uploads and on-the-fly processing.
-Download Results: Export extracted data as CSV files for easy integration into other systems.
+### Dual Interfaces
+   Streamlit Web UI for interactive, point-and-click analysis in the browser
+   CLI Mode (python run.py --cli) for headless batch runs
+### Automated PDF Parsing & RAG Pipelines
+   Splits large PDFs into 1 000-character chunks with overlap
+   Applies HyDE, RAG Fusion, and Agentic RAG (via LangChain) to retrieve context and extract metrics
+### Advanced Extraction Logic
+   Regex-based numeric parsing (e.g. pounds→tons)
+   Captures development metrics such as square footage (GSF), affordable and market-rate residential units, parking spaces, open-space ratios, waste generation, and greenhouse gas emissions
+### LanceDB Vector Store
+Fast, on-disk similarity search over document embeddings
+### Configurable Prompts
+All domain-specific question templates and response formats live in prompts.py for easy editing
+### Automated Cleanup & Reporting
+   Deletes stale Excel outputs before each run
+   Assembles results into .xlsx reports (one file per PDF folder) and provides download links in the UI
 
-## 📁 Project Structure
-Equity-Development-Index/
+## ⚙️ Prerequisites
+Python 3.9+
+OpenAI API Key (GPT-4o access)
+git (for cloning)
+Windows / macOS / Linux
 
-├── data/                         # Folder containing uploaded and sample PDF files
+**1. Clone the repository**
+git clone https://github.com/yourusername/batch-pdf-rag.git
+cd batch-pdf-rag
 
-│   ├── sample.pdf                # Example PDF for testing
+**2. Create & activate a virtual environment**
+python -m venv .venv
+#Windows (PowerShell)
+.\.venv\Scripts\Activate.ps1
+#macOS/Linux
+source .venv/bin/activate
 
-│   └── other uploaded PDFs...
-
-├── src/
-
-│   ├── main.py                   # Streamlit app for file upload and interaction
-
-│   ├── processing.py             # PDF processing and regex extraction logic
-
-├── requirements.txt              # Dependencies for setting up the project
-
-├── README.md                     # Project documentation
-
-## 🔧 Installation
-### 1. Clone the repository:
-git clone https://github.com/masrar000/Equity-Development-Index.git
-
-cd Equity-Development-Index
-
-### 2. Set up a virtual environment (optional but recommended):
-python3 -m venv env
-
-source env/bin/activate   # For Linux/Mac
-
-env\Scripts\activate      # For Windows
-
-### 3. Install dependencies:
-
+**3. Install dependencies**
+pip install --upgrade pip
 pip install -r requirements.txt
 
-## 🏃 How to Run
+## 🔧 Configuration
+**1. Environment Variables**
+   Rename .env.example → .env
+   Populate with your OpenAI key: OPENAI_API_KEY=sk-…
+**2. config.py**
+Automatically loads .env and injects OPENAI_API_KEY into os.environ.
 
-### 1. Navigate to the project directory and run the Streamlit app:
+## 🚀 Usage
+### 🔍 Streamlit Web UI
+#From project root, with venv active:
+streamlit run run_ui.py
 
-python -m streamlit run src/main.py
+1. Open your browser at http://localhost:8501.
+2. Enter the path to a parent directory containing one or more subfolders of PDFs.
+3. Click Run Analysis.
+4. As each subfolder processes, you’ll see progress messages.
+5. When complete, download per-folder .xlsx via on-page buttons.
 
-### 2.Open Streamlit in your browser:
+Tip: the UI auto-cleans old FolderName.xlsx before re-running.
 
-python -m streamlit run src/main.py
+### 💻 CLI Mode
+#Headless batch run:
+python run.py --cli "/full/path/to/parent_directory"
+* If the specified directory has subfolders, each is processed in turn.
+* If no subfolders, the directory itself is treated as one batch.
+* Output:
+  Console table of results
+  Excel files saved to Results/<FolderName>.xlsx (or configured path)
 
-## 🎯 Usage
 
-### 1. Upload a PDF:
+## 📁 Project Structure
+Batch-pdf-rag/
+├── .venv/                     # Virtual environment
+├── .env                       # env file (has the API key)
+├── config.py                  # Loads .env, sets OPENAI_API_KEY
+├── libraries.py               # Centralized imports & utilities
+├── prompts.py                 # All RAG question templates & unit map
+├── processing.py              # Core: cleanup, PDF-split, RAG, extraction, Excel
+├── run_ui.py                  # Streamlit front-end entrypoint
+├── run.py                     # Dispatcher: UI default, CLI with --cli
+├── requirements.txt           # Pinned dependencies via pip freeze
+└── Results/                   # Generated Excel outputs per folder
 
-Use the Streamlit file uploader to upload a PDF from your local machine. The file will be saved in the data/ folder for processing.
+## 🗂️ File Descriptions
+**.env**
+Stores OPENAI_API_KEY; loaded by config.py.
 
-### 2. Process the PDF:
+**config.py**
+Uses dotenv to load .env; raises error if key missing.
 
-Once uploaded, the app will automatically extract key metrics and display them as a table.
+**libraries.py**
+Standard & third-party imports (os, glob, pandas, openpyxl, streamlit, nest_asyncio, LangChain classes).
+Applies nest_asyncio.apply() for Streamlit+async compat.
 
-### 3. Download Results:
+**prompts.py**
+Four dictionaries:
+   rag_fusion_with_no_action, rag_fusion_with_action
+   rag_with_no_action, rag_with_action
+Defines component_units_map for labeling results.
 
-Download the extracted results as a CSV file directly from the Streamlit app.
+**processing.py**
+1. cleanup_generated_files
+2. load_and_split_pdfs_from_directory (PyPDFLoader + RecursiveCharacterTextSplitter)
+3. create_vectorstore (LanceDB.from_texts with metadata)
+4. rag_query (retrieval + ChatOpenAI prompt wrapper + HumanMessage)
+5. extract_numeric_value (parsing & unit conversion logic)
+6. process_all_dictionary_questions (loops through all prompts, builds DataFrame)
+7. save_results_to_excel (writes .xlsx, replaces zeros)
+8. main_cli (mirrors Streamlit pipeline for CLI)
 
-## ✏️ Customization
+**run_ui.py**
+1. Text input, button, and per-folder progress in Streamlit.
+2. Calls processing.py functions, shows success/errors, offers download.
 
-You can customize the project by:
+**run.py**
+1. Uses argparse to detect --cli.
+2. No args → launches Streamlit UI; --cli PATH → calls main_cli(PATH).
 
-Adding new extraction queries: Modify the queries dictionary in processing.py to extract additional metrics.
+**requirements.txt**
+All Python deps pinned for reproducibility.
 
-Improving regex patterns: Improve or add new patterns in _extract_relevant_info_from_split() to handle different PDF formats.
+## 🤖 How It Works
 
-Example:
+**1. Cleanup**
+Deletes any existing FolderName.xlsx in each batch folder.
 
-queries = {
-   
-    "Affordable residential units": "How many affordable residential units are listed?",
-    
-    "Gross square footage (GSF)": "What is the total GSF mentioned?",
-    
-    "Parking spaces": "How many parking spaces are allocated?",
-    
-    "Healthcare space": "How many square feet of space is allocated to healthcare facilities?"
+**2. PDF Load & Chunk**
+PyPDFLoader reads full PDF → LangChain splits into ~1 000-char chunks with 200-char overlap.
 
-}
+**3. Vector Store**
+Each chunk → text embedding via text-embedding-ada-002 → stored in LanceDB with page metadata.
 
-## 📊 Sample Output
-When you upload a PDF and process it, the app displays the results in a table like:
+**4. RAG Queries**
+For each component prompt: retrieve top-k chunks → assemble context → call GPT-4o with HumanMessage.
+Two modes:
+   **RAG Fusion** (multi-retriever + Reciprocal Rank Fusion (RRF))
+   **Agentic RAG** (single retriever + potential calculation agent)
 
-Component                       | Extracted Value
+**5. Extraction**
+Parse returned answer string to float (handling pounds→tons, summing active/passive OSR).
 
-Affordable residential units    | 45
+**6. Results Assembly**
+   Populate a pandas DataFrame with Component, No Action, With Action, Units.
+   Zero or failed extractions marked "Value not found".
 
-Gross square footage (GSF)	     | 120,000
+**7.Excel Export**
+Write .xlsx via openpyxl, one sheet named by the same name as processed directory.
 
-Parking spaces	                 | 150
+## ⚙️ Customization & Tuning
+**Prompts**
+Edit prompts.py to add/remove components or change the instruction formats.
 
-You can download the results as a CSV file for further analysis.
+**Chunking**
+In processing.py, adjust chunk_size & chunk_overlap to suit document density.
+
+**VectorStore Persistence**
+By default LanceDB uses an in-memory or temp store. Pass a path="my_lancedb_dir" to from_texts() to persist on disk.
+
+**Model & Parameters**
+Swap ChatOpenAI(model="gpt-4o-2024-05-13") for any supported OpenAI model.
+Tweak top-k retriever settings via vectorstore.as_retriever(search_kwargs={...}).
+
+## 🐞 Troubleshooting
+
+**ModuleNotFoundError: pypdf**
+pip install pypdf cryptography
+
+**Rate limits / timeouts**
+Catch exceptions around llm(messages) and retry with backoff.
+
+**Encrypted PDFs**
+Ensure your PDFs are not password-protected; LangChain’s loader doesn’t handle encryption.
+
+**Disk space errors**
+Clean up large LanceDB cache directories or mount on a larger volume.
 
 ## 🤝 Contributing
-We welcome contributions! Follow these steps to contribute:
-1. Fork the repository.
-2. Create a new branch:
-   git checkout -b feature/your-feature-name
-3. Make your changes and commit them:
-   git commit -m "Add your message"
-4. Push to your branch:
-   git push origin feature/your-feature-name
-5. Submit a pull request
+**1. Fork the repo**
+
+**2. Create a feature branch:**
+git checkout -b feat/my-awesome-feature
+
+**3. Install dev dependencies & run tests (if any)**
+
+**4. Commit & push**
+
+**5. Open a Pull Request against main**
 
 
-
+## 📄 License
+See LICENSE for details.
