@@ -126,8 +126,6 @@ Batch-pdf-rag/
 
 ├── libraries.py               # Centralized imports & utilities
 
-├── Documents                  # All documents
-
 
 ├── prompts.py                 # All RAG question templates & unit map
 
