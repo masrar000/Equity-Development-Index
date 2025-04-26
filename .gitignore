@@ -1,0 +1,27 @@
+# Byte-compiled & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+.venv/
+venv/
+
+# Environment variables
+.env
+
+# Excel outputs & results
+Results*/ 
+*.xlsx
+
+# LangChain/LanceDB caches
+lancedb/
+__lancedb__/
+
+# Editor & OS files
+.vscode/
+*.swp
+.DS_Store
+
+# Test/sample EIS PDFs
+documents/
