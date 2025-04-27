@@ -56,7 +56,7 @@ git (for cloning)
 Windows / macOS / Linux
 
 **1. Clone the repository**
-git clone https://github.com/yourusername/batch-pdf-rag.git
+git clone https://github.com/masrar000/Equity-Development=Index.git
 
 In the terminal: cd batch-pdf-rag
 
