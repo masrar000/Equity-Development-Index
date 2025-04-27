@@ -1,17 +1,16 @@
-# run.py
-import sys
+#!/usr/bin/env python3
 import argparse
+import src.config   # ← this will read .env and set OPENAI_API_KEY
 
 def run_ui():
-    # If you run “python run.py” without --cli, we want Streamlit
-    import streamlit as st
+    # call the UI entrypoint
     from run_ui import main as ui_main
     ui_main()
 
 def run_cli(directory):
-    # Delegate to processing.main_cli
-    import processing
-    processing.main_cli(directory)
+    # call your CLI pipeline
+    from src.processing import main_cli
+    main_cli(directory)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -25,10 +24,8 @@ def main():
     args = parser.parse_args()
 
     if args.cli:
-        # e.g. python run.py --cli D:\Final_Capstone\MyPdfs
         run_cli(args.cli)
     else:
-        # e.g. python run.py
         run_ui()
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
-# config.py
-from libraries import load_dotenv, os, find_dotenv
+from .libraries import load_dotenv, find_dotenv
+import os
 
 # load .env from project root
 load_dotenv(find_dotenv())

@@ -1,15 +1,16 @@
-# processing.py
-from libraries import os, re, glob, pd, defaultdict, Workbook, dataframe_to_rows, st
-from libraries import PyPDFLoader, RecursiveCharacterTextSplitter
-from libraries import ChatOpenAI, OpenAIEmbeddings, LanceDB
-from prompts import (
+# src/processing.py
+
+from .libraries import os, re, glob, pd, defaultdict, Workbook, dataframe_to_rows, st
+from .libraries import PyPDFLoader, RecursiveCharacterTextSplitter
+from .libraries import ChatOpenAI, OpenAIEmbeddings, LanceDB
+from .prompts import (
     rag_fusion_with_no_action,
     rag_fusion_with_action,
     rag_with_no_action,
     rag_with_action,
     component_units_map,
 )
-from langchain.schema import HumanMessage #wns everything related to constructing and sending prompts and not general utilities so NOT libraries.py
+from langchain.schema import HumanMessage  # wns everything related to constructing and sending prompts and not general utilities so NOT libraries.py
 
 
 ###############################################################################
@@ -63,7 +64,6 @@ def create_vectorstore(splits):
     )
 
 
-
 ###############################################################################
 # 4. RAG QUERY (Modified to return page numbers for terminal logging)
 ###############################################################################
@@ -91,18 +91,27 @@ def rag_query(query, vectorstore, llm):
     return response.content.strip(), context, pages
 
 
-
 ###############################################################################
 # 5. EXTRACTION FUNCTIONS (Using simple text.split approach)
 ###############################################################################
-
 def extract_numeric_value(text, component):
+    """
+    Extracts the numeric value from the LLM's response for the given component.
+    
+    Special handling:
+      - For "Greenhouse Gas Emissions": Checks if the value is in pounds and converts to tons (2000 pounds = 1 ton).
+      - For "Open Space Ratio": 
+           * If active and/or passive values are provided, sums them.
+           * Otherwise, finds the first numeric value after a colon.
+      - Otherwise: Uses the value after the last colon.
+    """
     try:
+        # ----- Special handling for Greenhouse Gas Emissions -----
         if component.lower() == "greenhouse gas emissions":
             value_str = text.rsplit(":", 1)[1].strip()
             tokens = value_str.split()
             numeric_value = float(tokens[0].replace(",", ""))
-            unit = "tons"
+            unit = "tons"  # default assumption
             for token in tokens[1:]:
                 token_lower = token.lower()
                 if "pound" in token_lower or "lb" in token_lower:
@@ -114,6 +123,8 @@ def extract_numeric_value(text, component):
             if unit == "pounds":
                 return float(numeric_value / 2000)
             return float(numeric_value)
+        
+        # ----- Special handling for Open Space Ratio -----
         if component.lower() == "open space ratio":
             active_match = re.search(r"active(?:\s*[:\-]\s*|\s+)([\d\.]+)", text, re.IGNORECASE)
             passive_match = re.search(r"passive(?:\s*[:\-]\s*|\s+)([\d\.]+)", text, re.IGNORECASE)
@@ -126,17 +137,23 @@ def extract_numeric_value(text, component):
                 return float(match.group(1))
             else:
                 raise ValueError("No numeric value found for Open Space Ratio")
+        
+        # ----- Default extraction for other components -----
         value_str = text.rsplit(":", 1)[1].strip().replace(",", "")
         return float(value_str.split()[0])
+    
     except Exception as e:
         print(f"Failed to extract numeric value for component '{component}'. Error: {e}\nContext:\n{text}")
         return 0
 
 
 def extract_value_rag_fusion(text, component):
+    """Extraction function for RAG Fusion responses using the common helper."""
     return extract_numeric_value(text, component)
 
+
 def extract_value_rag(text, component):
+    """Extraction function for Agentic RAG responses using the common helper."""
     return extract_numeric_value(text, component)
 
 
@@ -144,6 +161,10 @@ def extract_value_rag(text, component):
 # 7. PROCESSING ALL DICTIONARY-BASED QUESTIONS
 ###############################################################################
 def process_all_dictionary_questions(directory, vectorstore, llm):
+    """
+    Build a DataFrame with columns: [Component, No Action, With Action, Units].
+    The 'No Action' and 'With Action' columns are numeric, 'Units' is text.
+    """
     final_data = defaultdict(lambda: {"No Action": 0, "With Action": 0, "Units": ""})
 
     def handle_query(component, question, action_label, use_fusion):
@@ -171,34 +192,40 @@ def process_all_dictionary_questions(directory, vectorstore, llm):
         if not final_data[component]["Units"]:
             final_data[component]["Units"] = component_units_map.get(component, "")
 
+    # 1) RAG-Fusion No Action
     for category, list_of_dicts in rag_fusion_with_no_action.items():
         for question_dict in list_of_dicts:
             for component, question in question_dict.items():
                 handle_query(component, question, "No Action", use_fusion=True)
 
+    # 2) RAG-Fusion With Action
     for category, list_of_dicts in rag_fusion_with_action.items():
         for question_dict in list_of_dicts:
             for component, question in question_dict.items():
                 handle_query(component, question, "With Action", use_fusion=True)
 
+    # 3) Agentic RAG No Action
     for category, list_of_dicts in rag_with_no_action.items():
         for question_dict in list_of_dicts:
             for component, question in question_dict.items():
                 handle_query(component, question, "No Action", use_fusion=False)
 
+    # 4) Agentic RAG With Action
     for category, list_of_dicts in rag_with_action.items():
         for question_dict in list_of_dicts:
             for component, question in question_dict.items():
                 handle_query(component, question, "With Action", use_fusion=False)
 
+    # Build final DataFrame with columns: Component, No Action, With Action, Units
     rows = []
     for comp, values in final_data.items():
-        rows.append({
+        row = {
             "Component": comp,
             "No Action": values["No Action"],
             "With Action": values["With Action"],
             "Units": values["Units"],
-        })
+        }
+        rows.append(row)
 
     df = pd.DataFrame(rows, columns=["Component", "No Action", "With Action", "Units"])
     df.sort_values("Component", inplace=True)
@@ -211,11 +238,13 @@ def process_all_dictionary_questions(directory, vectorstore, llm):
 ###############################################################################
 def save_results_to_excel(df, directory_path):
     dir_name = os.path.basename(os.path.normpath(directory_path))
-    output_path = f"D:/Final_Capstone/Results_test/{dir_name}.xlsx"
+    output_path = f"D:\LLM_with_RAG_workflows\Final_LLM\Results_test\{dir_name}.xlsx"
     
+    # make a copy so we don't alter the df you print in the terminal
     df_excel = df.copy()
-    df_excel["No Action"]    = df_excel["No Action"].apply(lambda x: "Value not found" if x == 0 else x)
-    df_excel["With Action"]  = df_excel["With Action"].apply(lambda x: "Value not found" if x == 0 else x)
+    # replace any numeric 0 in the two columns with "Value not found"
+    df_excel["No Action"]   = df_excel["No Action"].apply(lambda x: "Value not found" if x == 0 else x)
+    df_excel["With Action"] = df_excel["With Action"].apply(lambda x: "Value not found" if x == 0 else x)
 
     wb = Workbook()
     ws = wb.active
@@ -231,7 +260,7 @@ def save_results_to_excel(df, directory_path):
 
 
 def main_cli(directory):
-    from libraries import ChatOpenAI
+    from .libraries import ChatOpenAI
     # 1) Discover which folders to process
     subfolders = [
         os.path.join(directory, d)
@@ -261,4 +290,3 @@ def main_cli(directory):
 
         output_file = save_results_to_excel(df, sub)
         print(f"Results saved to {output_file}")
-
