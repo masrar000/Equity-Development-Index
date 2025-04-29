@@ -1,4 +1,4 @@
-1. cd D:\LLM_with_RAG_workflows\Final_LLM\Equity-Development-Index (My project path)
+1. cd D:\LLM_with_RAG_workflows\Final_LLM\Equity-Development-Index (My project path) 
 2. run python -m venv .venv # just the first time to install virtual python environment
 3. followed by Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass # just the first time to install virtual python environment
 4.  .\.venv\Scripts\Activate.ps1 
