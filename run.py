@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import src.config   # ← this will read .env and set OPENAI_API_KEY
+import src.config   # ← this will read .env and set OPENAI_API_KEY 
 
 def run_ui():
     # call the UI entrypoint
