@@ -16,6 +16,10 @@ from src.processing import (
 from src.libraries import ChatOpenAI
 
 def main():
+    password = st.text_input("Enter password", type="password")
+    if password != "Jm@xBond":
+        st.stop()
+
     st.title("Batch PDF Analysis with RAG Workflows")
 
     input_mode = st.radio(
@@ -25,6 +29,8 @@ def main():
 
     directory = None
     _temp_dirs = []
+
+
 
     # --- Input Modes ---
     if input_mode == "Directory":
