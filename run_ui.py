@@ -20,7 +20,7 @@ def main():
 
     input_mode = st.radio(
         "Select input mode:",
-        ("Directory", "Upload PDF", "ZIP Path")
+        ("Directory", "Upload PDF", "ZIP Archive File")
     )
 
     directory = None
@@ -37,8 +37,8 @@ def main():
             with open(pdf_path, "wb") as f:
                 f.write(uploaded_pdf.getbuffer())
             directory = tmp
-    elif input_mode == "ZIP Path":
-        zip_path = st.text_input("Enter full path to your ZIP archive:")
+    elif input_mode == "ZIP Archive File":
+        zip_path = st.file_uploader("Upload a ZIP archive:")
         if zip_path and os.path.isfile(zip_path) and zip_path.lower().endswith(".zip"):
             tmp = tempfile.mkdtemp(); _temp_dirs.append(tmp)
             try:
