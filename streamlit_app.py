@@ -20,6 +20,9 @@ def main():
     if password != "Jm@xBond":
         st.stop()
 
+    api_key=st.text_input("Enter the API Key here: ") 
+    os.environ["OPENAI_API_KEY"] = api_key
+    
     st.title("Batch PDF Analysis with RAG Workflows")
 
     input_mode = st.radio(
