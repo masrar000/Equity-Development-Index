@@ -254,7 +254,7 @@ def save_results_to_excel(df, directory_path):
         for c_idx, value in enumerate(row):
             ws.cell(row=r_idx + 1, column=c_idx + 1, value=value)
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    #os.makedirs(os.path.dirname(output_path), exist_ok=True)
     wb.save(output_path)
     return output_path
 
