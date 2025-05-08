@@ -238,7 +238,7 @@ def process_all_dictionary_questions(directory, vectorstore, llm):
 ###############################################################################
 def save_results_to_excel(df, directory_path):
     dir_name = os.path.basename(os.path.normpath(directory_path))
-    output_path = f"D:\LLM_with_RAG_workflows\Final_LLM\Results_test\{dir_name}.xlsx"
+    output_path = f".\Equity-Development-Index\Results_test\{dir_name}.xlsx"
     
     # make a copy so we don't alter the df you print in the terminal
     df_excel = df.copy()

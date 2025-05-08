@@ -4,7 +4,7 @@ import src.config   # ← this will read .env and set OPENAI_API_KEY
 
 def run_ui():
     # call the UI entrypoint
-    from run_ui import main as ui_main
+    from streamlit_app import main as ui_main
     ui_main()
 
 def run_cli(directory):
