@@ -4,5 +4,5 @@
 4.  .\.venv\Scripts\Activate.ps1 
 5. D:\LLM_WITH_RAG_WORKFLOWS\Final_LLM\Equity-Development-Index\.venv\Scripts\python.exe -m pip install --upgrade pip # updated my pip. just the first time
 6. pip install -r requirements.txt # just the first time
-7. If streamlit: streamlit run run_ui.py
+7. If streamlit: streamlit run streamlit_app.py
 8. If no streamlit: python run.py --cli "D:\LLM_with_RAG_workflows\Capstone Project DSE\EIS docs\Verify_Test_Docs" (my folders path with documents)
