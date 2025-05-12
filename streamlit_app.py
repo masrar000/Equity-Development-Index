@@ -7,6 +7,7 @@ import streamlit as st
 import tempfile
 import shutil
 import zipfile
+import glob
 
 from src.processing import (
     cleanup_generated_files,
@@ -70,7 +71,7 @@ def main():
 
         llm = ChatOpenAI(model="gpt-4o-2024-05-13")
 
-        # find every PDF-containing folder
+        # find every PDF‐containing folder
         pdf_dirs = [
             root
             for root, _, files in os.walk(directory)
@@ -80,6 +81,7 @@ def main():
         if not pdf_dirs:
             st.error("No PDFs found under that path.")
         else:
+            # ───── Process each PDF folder ─────
             for sub in pdf_dirs:
                 st.write(f"## Processing: {os.path.relpath(sub, directory)}")
                 cleanup_generated_files(sub)
@@ -95,24 +97,32 @@ def main():
                     st.error(f"No data extracted for {os.path.basename(sub)}.")
                     continue
 
-                # --- Generate Excel in memory ---
+                # 1) Decide on a base filename
+                pdf_paths = glob.glob(os.path.join(sub, "*.pdf"))
+                if len(pdf_paths) == 1:
+                    base = os.path.splitext(os.path.basename(pdf_paths[0]))[0]
+                else:
+                    base = os.path.basename(sub)
+
+                # 2) Generate Excel in memory
                 buffer = io.BytesIO()
-                sheet_name = os.path.basename(sub)[:31]  # Excel limit
+                sheet_name = base[:31]  # Excel sheet names max 31 chars
                 with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
                     df.to_excel(writer, index=False, sheet_name=sheet_name)
                 buffer.seek(0)
 
-                # --- Download button ---
+                # 3) Present the download button
                 st.download_button(
-                    label=f"Download {sheet_name}.xlsx",
+                    label=f"Download {base}.xlsx",
                     data=buffer.getvalue(),
-                    file_name=f"{sheet_name}.xlsx",
+                    file_name=f"{base}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
-            # clean up temp folders
+            # ───── Clean up all temp folders ─────
             for td in _temp_dirs:
                 shutil.rmtree(td, ignore_errors=True)
+
 
 if __name__ == "__main__":
     main()
